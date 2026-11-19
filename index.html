@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ルレット｜汎用ルーレットメーカー</title>
+<meta name="description" content="項目を入れるだけでカラフルなルーレットが作れるWebメーカー。プリセットと共有リンク、履歴つき。">
+<meta name="theme-color" content="#e8590c">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <h1>ルレット</h1>
+  <p class="tagline">汎用ルーレットメーカー</p>
+</header>
+
+<main>
+  <section class="card wheel-card">
+    <div class="canvas-wrap">
+      <canvas id="wheelCanvas" width="640" height="640"></canvas>
+    </div>
+    <div id="winnerDisplay" class="winner" aria-live="polite">項目を入れて「回す」を押してね</div>
+    <div class="actions">
+      <button id="spinBtn" class="btn btn-primary" type="button">回す</button>
+      <button id="copyResultBtn" class="btn btn-sub" type="button" disabled>結果をコピー</button>
+    </div>
+    <p id="copyMsg" class="note" aria-live="polite"></p>
+  </section>
+
+  <section class="card">
+    <h2>プリセット</h2>
+    <div class="actions">
+      <button class="btn btn-sub preset-btn" type="button" data-preset="dinner">晩ごはん</button>
+      <button class="btn btn-sub preset-btn" type="button" data-preset="punishment">罰ゲーム</button>
+      <button class="btn btn-sub preset-btn" type="button" data-preset="roles">係決め</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>項目（<span id="itemCount">0</span>件）</h2>
+    <div id="itemsList" class="edit-list"></div>
+    <div class="actions">
+      <button id="addItemBtn" class="btn btn-sub" type="button">＋ 項目を追加</button>
+    </div>
+    <h3 class="subhead">まとめて編集（1行1項目）</h3>
+    <textarea id="bulkArea" rows="6" placeholder="1行に1項目ずつ入力すると、上のリストに反映されます"></textarea>
+    <div class="actions">
+      <button id="applyBulkBtn" class="btn btn-sub" type="button">テキストから反映</button>
+      <button id="shareBtn" class="btn btn-sub" type="button">共有リンクをコピー</button>
+    </div>
+    <p id="shareMsg" class="note" aria-live="polite"></p>
+  </section>
+
+  <section class="card" id="historyCard">
+    <h2>履歴（最新20件）</h2>
+    <ol id="historyList" class="history-list"></ol>
+    <p id="historyEmpty" class="note">まだ履歴はありません。</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <p>ルレット — 入力内容はブラウザ内でのみ処理されます</p>
+</footer>
+
+<script src="app.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
