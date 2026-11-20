@@ -5,20 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ルレット｜汎用ルーレットメーカー</title>
 <meta name="description" content="項目を入れるだけでカラフルなルーレットが作れるWebメーカー。プリセットと共有リンク、履歴つき。">
-<meta name="theme-color" content="#e8590c">
+<meta name="theme-color" content="#0a0f1c">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>
+try {
+  var savedTheme = localStorage.getItem("ruletto-theme");
+  if (savedTheme === "light" || savedTheme === "dark") {
+    document.documentElement.setAttribute("data-theme", savedTheme);
+  }
+} catch (e) { /* テーマ保存が使えない環境ではダークを既定にする */ }
+</script>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<header class="site-header">
-  <h1>ルレット</h1>
-  <p class="tagline">汎用ルーレットメーカー</p>
+<nav class="topbar">
+  <div class="wrap topbar-in">
+    <a class="brand" href="#top">ルレット</a>
+    <span class="topbar-links">
+      <a href="#wheel-sec">ホイール</a>
+      <a href="#preset-sec">プリセット</a>
+      <a href="#items-sec">項目</a>
+      <a href="#historyCard">履歴</a>
+      <button type="button" class="theme-toggle" id="themeToggle" aria-label="テーマ切り替え">🌙</button>
+    </span>
+  </div>
+</nav>
+
+<header class="site-header" id="top">
+  <div class="wrap">
+    <p class="eyebrow">ROULETTE MAKER</p>
+    <h1>ルレット</h1>
+    <p class="tagline lead">汎用ルーレットメーカー</p>
+  </div>
 </header>
 
-<main>
-  <section class="card wheel-card">
+<main class="wrap">
+  <section class="card wheel-card" id="wheel-sec">
     <div class="canvas-wrap">
       <canvas id="wheelCanvas" width="640" height="640"></canvas>
     </div>
@@ -30,7 +54,7 @@
     <p id="copyMsg" class="note" aria-live="polite"></p>
   </section>
 
-  <section class="card">
+  <section class="card" id="preset-sec">
     <h2>プリセット</h2>
     <div class="actions">
       <button class="btn btn-sub preset-btn" type="button" data-preset="dinner">晩ごはん</button>
@@ -39,7 +63,7 @@
     </div>
   </section>
 
-  <section class="card">
+  <section class="card" id="items-sec">
     <h2>項目（<span id="itemCount">0</span>件）</h2>
     <div id="itemsList" class="edit-list"></div>
     <div class="actions">
@@ -61,7 +85,7 @@
   </section>
 </main>
 
-<footer class="site-footer">
+<footer class="site-footer wrap">
   <p>ルレット — 入力内容はブラウザ内でのみ処理されます</p>
 </footer>
 
