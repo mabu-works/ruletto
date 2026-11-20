@@ -307,3 +307,21 @@ textarea {
   html { scroll-behavior: auto; }
   .btn { transition: none; }
 }
+
+/* 印刷用エリアは画面では表示しない */
+.print-only { display: none; }
+
+@media print {
+  /* 入力UI・ホイール・履歴などを隠し、項目一覧と当選結果だけを紙面に出す */
+  .topbar, .site-header, .site-footer, main.wrap { display: none !important; }
+  body { background: #ffffff; color: #000000; }
+  .print-only {
+    display: block;
+    color: #000000;
+    padding: 24px;
+  }
+  .print-only h2 { margin: 0 0 12px; font-size: 1.3rem; }
+  .print-result { font-size: 1.4rem; font-weight: 800; margin: 0 0 16px; }
+  .print-items { margin: 0; padding-left: 1.6rem; }
+  .print-items li { padding: 0.2rem 0; }
+}

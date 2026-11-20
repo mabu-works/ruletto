@@ -6,8 +6,9 @@ const PALETTE = [
   "#1098ad", "#1c7ed6", "#7048e8", "#a61e4d", "#e67700",
   "#2f9e44", "#1971c2"
 ];
-const MAX_ITEMS = 24;
+const MAX_ITEMS = 50;
 const MAX_HISTORY = 20;
+const DATA_KEY = "ruletto-data";
 const PRESETS = {
   dinner: ["カレー", "ラーメン", "寿司", "焼肉", "パスタ", "唐揚げ", "鍋", "ハンバーグ"],
   punishment: ["一発芸", "モノマネ", "腕立て10回", "変顔で写真", "歌を一曲", "早口言葉", "ジュースおごり", "もう一回回す"],
@@ -32,6 +33,35 @@ const spinBtn = $("spinBtn");
 const copyResultBtn = $("copyResultBtn");
 const copyMsg = $("copyMsg");
 const shareMsg = $("shareMsg");
+const printBtn = $("printBtn");
+const printItemsList = $("printItemsList");
+const printResult = $("printResult");
+const dataMsg = $("dataMsg");
+
+// ===== ホイールラベル（区画数に応じて段階的に縮小） =====
+// 50件では1区画が狭くなるため、フォントサイズと省略文字数を区画数で切り替える。
+// 判読限界がある前提で、項目リスト表示と当選結果の大きな表示は従来どおり維持する。
+function labelMaxChars(n) {
+  if (n <= 8) return 10;
+  if (n <= 16) return 9;
+  if (n <= 24) return 8;
+  if (n <= 36) return 7;
+  return 6;
+}
+function labelFontSize(n, R) {
+  let base;
+  if (n <= 8) base = 24;
+  else if (n <= 16) base = 20;
+  else if (n <= 24) base = 17;
+  else if (n <= 36) base = 14;
+  else base = 12;
+  const scale = (R || 306) / 306; // 基準半径306（640キャンバス時）で換算
+  return Math.max(9, Math.round(base * scale));
+}
+function truncateLabel(text, n) {
+  const max = labelMaxChars(n);
+  return text.length > max ? text.slice(0, max) + "…" : text;
+}
 
 // ===== ホイール描画 =====
 function drawWheel() {
@@ -72,8 +102,8 @@ function drawWheel() {
     ctx.textAlign = "right";
     ctx.textBaseline = "middle";
     ctx.fillStyle = "#fff";
-    ctx.font = "bold " + Math.max(13, Math.min(24, R / (n > 8 ? 9 : 7))) + "px sans-serif";
-    const label = items[i].length > 10 ? items[i].slice(0, 10) + "…" : items[i];
+    ctx.font = "bold " + labelFontSize(n, R) + "px sans-serif";
+    const label = truncateLabel(items[i], n);
     ctx.fillText(label, R - 12, 0, R * 0.62);
     ctx.restore();
   }
@@ -157,10 +187,69 @@ function finishSpin() {
   history.unshift({ label: lastResult, time: new Date() });
   if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
   renderHistory();
+  renderPrintArea();
+  saveData();
 }
 
 spinBtn.addEventListener("click", spin);
 canvas.addEventListener("click", spin);
+
+// ===== 自動保存（localStorage、キー: ruletto-data） =====
+// 項目リストと主要な設定（最後の結果・履歴）を入力が変わるたびに保存し、再訪時に復元する。
+// テーマキー ruletto-theme とは別キーで衝突しない。共有リンク（URLハッシュ）がある場合はそちらを優先する。
+function saveData() {
+  try {
+    localStorage.setItem(DATA_KEY, JSON.stringify({
+      items,
+      lastResult,
+      history: history.map((h) => ({
+        label: h.label,
+        time: (h.time instanceof Date ? h.time : new Date(h.time)).toISOString()
+      }))
+    }));
+  } catch (e) { /* 保存できない環境では自動保存なしで動作する */ }
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem(DATA_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.items) || data.items.length < 1 || data.items.length > MAX_ITEMS) return false;
+    items = data.items.map((s) => String(s).slice(0, 30));
+    lastResult = typeof data.lastResult === "string" ? data.lastResult : null;
+    if (Array.isArray(data.history)) {
+      history = data.history
+        .filter((h) => h && typeof h.label === "string")
+        .slice(0, MAX_HISTORY)
+        .map((h) => {
+          const t = new Date(h.time);
+          return { label: h.label, time: isNaN(t.getTime()) ? new Date() : t };
+        });
+    }
+    return true;
+  } catch (e) { /* 壊れた保存データは無視する */ }
+  return false;
+}
+
+// ===== 印刷用エリア（項目一覧と当選結果のみを紙面に出す） =====
+function renderPrintArea() {
+  if (!printItemsList || !printResult) return;
+  printItemsList.innerHTML = "";
+  items.forEach((value) => {
+    const li = document.createElement("li");
+    li.textContent = value;
+    printItemsList.appendChild(li);
+  });
+  printResult.textContent = lastResult ? "当選結果：" + lastResult : "当選結果：まだ回していません";
+}
+
+if (printBtn) {
+  printBtn.addEventListener("click", () => {
+    renderPrintArea();
+    try { window.print(); } catch (e) { /* 印刷が使えない環境では何もしない */ }
+  });
+}
 
 // ===== 履歴 =====
 function renderHistory() {
@@ -197,6 +286,8 @@ function renderItems() {
       items[i] = input.value;
       drawWheel();
       syncBulk();
+      renderPrintArea();
+      saveData();
     });
 
     const del = document.createElement("button");
@@ -209,6 +300,7 @@ function renderItems() {
       renderItems();
       drawWheel();
       syncBulk();
+      saveData();
     });
 
     row.appendChild(dot);
@@ -218,6 +310,7 @@ function renderItems() {
   });
   $("itemCount").textContent = String(items.length);
   $("addItemBtn").disabled = items.length >= MAX_ITEMS;
+  renderPrintArea();
 }
 
 function syncBulk() {
@@ -230,6 +323,7 @@ $("addItemBtn").addEventListener("click", () => {
   renderItems();
   drawWheel();
   syncBulk();
+  saveData();
 });
 
 $("applyBulkBtn").addEventListener("click", () => {
@@ -239,6 +333,22 @@ $("applyBulkBtn").addEventListener("click", () => {
   renderItems();
   drawWheel();
   syncBulk();
+  saveData();
+});
+
+// ===== 保存データの消去（初期化） =====
+$("clearDataBtn").addEventListener("click", () => {
+  try { localStorage.removeItem(DATA_KEY); } catch (e) { /* 消去できない環境でも初期化は行う */ }
+  items = ["A", "B", "C", "D"];
+  lastResult = null;
+  history = [];
+  copyResultBtn.disabled = true;
+  winnerDisplay.textContent = "項目を入れて「回す」を押してね";
+  renderItems();
+  drawWheel();
+  syncBulk();
+  renderHistory();
+  if (dataMsg) dataMsg.textContent = "保存データを消去し、初期項目に戻しました。";
 });
 
 // ===== プリセット =====
@@ -247,12 +357,13 @@ document.querySelectorAll(".preset-btn").forEach((btn) => {
     const preset = PRESETS[btn.dataset.preset];
     if (!preset) return;
     items = preset.slice();
+    lastResult = null;
     renderItems();
     drawWheel();
     syncBulk();
     winnerDisplay.textContent = "プリセットをセットしました。「回す」を押してね";
-    lastResult = null;
     copyResultBtn.disabled = true;
+    saveData();
   });
 });
 
@@ -302,13 +413,20 @@ $("shareBtn").addEventListener("click", async () => {
 });
 
 // ===== 初期化 =====
+// 復元の優先順位：共有リンク（URLハッシュ）＞ 自動保存データ（ruletto-data）
+let restoredFromHash = false;
 if (location.hash.length > 1) {
-  decodeState(location.hash.slice(1));
+  restoredFromHash = decodeState(location.hash.slice(1));
+}
+if (!restoredFromHash && loadData() && lastResult) {
+  winnerDisplay.textContent = "🎉 " + lastResult;
+  copyResultBtn.disabled = false;
 }
 renderItems();
 drawWheel();
 syncBulk();
 renderHistory();
+renderPrintArea();
 
 // ===== テーマ切り替え（見た目のみ・ルーレットの動作には影響しない） =====
 (function initTheme() {

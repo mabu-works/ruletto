@@ -50,6 +50,7 @@ try {
     <div class="actions">
       <button id="spinBtn" class="btn btn-primary" type="button">回す</button>
       <button id="copyResultBtn" class="btn btn-sub" type="button" disabled>結果をコピー</button>
+      <button id="printBtn" class="btn btn-sub" type="button">結果を印刷</button>
     </div>
     <p id="copyMsg" class="note" aria-live="polite"></p>
   </section>
@@ -76,6 +77,11 @@ try {
       <button id="shareBtn" class="btn btn-sub" type="button">共有リンクをコピー</button>
     </div>
     <p id="shareMsg" class="note" aria-live="polite"></p>
+    <div class="actions">
+      <button id="clearDataBtn" class="btn btn-sub" type="button">保存データを消去して初期化</button>
+    </div>
+    <p id="dataMsg" class="note" aria-live="polite"></p>
+    <p class="note">項目リストはこのブラウザに自動保存され、次回開いたときに復元されます。</p>
   </section>
 
   <section class="card" id="historyCard">
@@ -84,6 +90,12 @@ try {
     <p id="historyEmpty" class="note">まだ履歴はありません。</p>
   </section>
 </main>
+
+<section class="print-only" id="printArea" aria-hidden="true">
+  <h2>ルレット｜項目一覧と当選結果</h2>
+  <p id="printResult" class="print-result"></p>
+  <ol id="printItemsList" class="print-items"></ol>
+</section>
 
 <footer class="site-footer wrap">
   <p>ルレット — 入力内容はブラウザ内でのみ処理されます</p>

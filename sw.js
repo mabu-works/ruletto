@@ -1,4 +1,4 @@
-const CACHE_NAME = "ruletto-v2";
+const CACHE_NAME = "ruletto-v3";
 const CORE = [
   "./",
   "./index.html",
